@@ -529,3 +529,218 @@ Kết quả khi chạy chươn trình:
 9477360
 9477364
 9477368
+------------------------------------------------------------------------------------------
+Trước hết hãy ôn lại kiến thứ cũ là muốn thay đổi giá trị của một biến thông qua hàm thì phải truyền tham chiếu hoặc truyền địa chỉ của biến đó vào hàm. Ví dụ chương trình sau:
+
+#include<iostream>
+
+using namespace std;
+
+void change(int a) {
+	a = 1000;
+}
+
+int main() {
+	int a = 5;
+	change(a);
+	cout << a;
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+5
+Có thể thấy giá trị của biến a không được thay đổi do bạn không truyền tham chiếu và cũng không truyền địa chỉ của a vào hàm (nếu bạn không hiểu thì có thể xem lại các bài trước).
+
+Trong phần câu hỏi của bài tập này có thể quan sát thấy:
+
+Biến arr được truyền thẳng vào hàm (không truyền địa chỉ của arr và cũng không truyền tham chiếu arr vào hàm).
+Hàm resize() là hàm cho arr trỏ tới ô nhớ khác mà đây chính là thay đổi giá trị của arr
+Do đó có thể kết luận rằng sau khi gọi hàm resize() thì arr sẽ vẫn chỉ trỏ tới vùng nhớ có 10 phần tử nên khi chạy chương trình sẽ báo lỗi (do truy xuất tới phần tử có chỉ số lớn hơn 10). Xem ví dụ chứng minh rằng arr không trỏ tới vùng nhớ khác sau khi gọi hàm resize():
+
+#include<iostream>
+
+using namespace std;
+
+void resize(int* arr, int newSize) {
+	arr = new int[newSize];
+}
+
+int main() {
+	int* arr = new int[10];
+	cout << arr << endl;
+	resize(arr, 1000);
+	cout << arr << endl;
+	delete[]arr;
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+00D45188
+00D45188
+Quay lại bài này nếu bạn muốn chương trình hiển thị được ra các số từ 0 tới 999 thì có thể truyền tham chiếu arr vào hàm hoặc truyền địa chỉ của arr vào hàm.
+
+Ví dụ với truyền tham chiếu arr vào hàm:
+
+#include<iostream>
+
+using namespace std;
+
+void resize(int*& arr, int newSize) {
+	delete[] arr;
+	arr = new int[newSize];
+}
+
+int main() {
+	int* arr = new int[10];
+	resize(arr, 1000);
+	for (int i = 0; i < 1000; i++) {
+		arr[i] = i;
+	}
+	for (int i = 0; i < 1000; i++) {
+		cout << arr[i] << " ";
+	}
+	delete[]arr;
+	return 0;
+}
+Ví dụ với truyền địa chỉ của arr vào hàm (bạn phải sử dụng con trỏ cấp 2):
+
+#include<iostream>
+
+using namespace std;
+
+void resize(int** arr, int newSize) {
+	delete[] *arr;
+	*arr = new int[newSize];
+}
+
+int main() {
+	int* arr = new int[10];
+	resize(&arr, 1000);
+	for (int i = 0; i < 1000; i++) {
+		arr[i] = i;
+	}
+	for (int i = 0; i < 1000; i++) {
+		cout << arr[i] << " ";
+	}
+	delete[]arr;
+	return 0;
+}
+Cả 2 chương trình này sẽ đều hiển thị ra màn hình các số từ 0 tới 999.
+
+----///
+Hãy tưởng tượng bạn có 10 hộp để đựng đồ (mảng với 10 phần tử):
+
+Bạn muốn thay thế 10 hộp này bằng 1000 hộp mới (mảng mới với 1000 phần tử).
+Bạn gọi người bán hàng (hàm resize) để mang đến 1000 hộp mới.
+Người bán hàng mang đến 1000 hộp mới, nhưng bạn lại quên nói họ phải làm gì với 10 hộp cũ.
+Kết quả:
+Bạn có 1000 hộp mới, nhưng không biết 10 hộp cũ ở đâu.
+10 hộp cũ vẫn còn chiếm chỗ, nhưng bạn không thể sử dụng chúng.
+Lỗi trong đoạn code tương tự như vậy:
+
+Hàm resize tạo ra một mảng mới với 1000 phần tử.
+Nhưng nó không biết phải làm gì với mảng cũ (10 phần tử).
+Mảng cũ bị "bỏ quên" và không thể truy cập được.
+Khi bạn cố gắng truy cập mảng cũ (ví dụ: in ra các phần tử), chương trình sẽ gặp lỗi và không thể chạy.
+
+
+-------//
+Mấy bạn kia giải thích khó hiểu và có chỗ sai, mình xin giải thích lại. 
+Thứ nhất: con trỏ arr ở hàm main và con trỏ arr ở hàm resize là 2 con trỏ khác nhau. 
+Thứ 2: Khi bạn cấp giá trị của con trỏ arr ở hàm main cho con trỏ ở hàm resize thì con trỏ của hàm resize vẫn sẽ trỏ đến vùng nhớ được cấp ở hàm main, nghĩa là lúc này xảy ra hiện tượng aliasing ( 2 con trỏ cùng trỏ vào 1 ô nhớ)
+Thứ 3: Chương trình lỗi vì khi bạn mở rộng kích thước bộ nhớ ở hàm resize thì bộ nhớ được mở rộng bất kì , không nhất thiết là ô nhớ phải liền kề nhau.
+Thứ 4: Việc các bạn chạy chương trình kia vẫn ra đúng kết quả là bởi vì máy tính của bạn khi ở rộng kích thước nó đã rơi vào TH mở rộng liên tiếp ( không phải lúc nào cũng mở rộng liên tiếp) => bộ nhớ đã được mở rộng đúng theo ý của chúng ta = > vẫn chạy đúng
+
+---------------------------------------------------------------------------------------------
++-------------------------------+  <- High address
+| Command-line arguments        |
+| and environment variables     |
++-------------------------------+
+|            Stack              |
+| (grows downwards)             |
++-------------------------------+
+|                               |
+|                               |
+|                               |
+|            Heap               |
+| (grows upwards)               |
++-------------------------------+
+|      Uninitialized data       |
+|             (bss)             |
++-------------------------------+
+|      Initialized data         |
++-------------------------------+
+|             Text              |
+| (read from program file by    |
+| exec)                         |
++-------------------------------+  <- Low address
+1. Text segment
+
+Text segment hay còn gọi là code segment là vùng nhớ lưu trữ các đoạn mã đã được biên dịch để chương trình thực thi. Đây là vùng nhớ read-only để ngăn chặn việc các đoạn mã bị thay đổi khi chương trình đang chạy.
+
+Thông thường text segment là sharable memory, do đó khi bạn mở 1 chương trình nhiều lần (ví dụ mở nhiều phần mềm soạn thảo văn bản) thì tất cả cách chương trình này đều sẽ chỉ dùng chung 1 vùng nhớ text segment.
+
+2. Initialized Data Segment
+
+Đây là vùng nhớ dùng để lưu trữ các biến toàn cục, biến được khai báo với từ khóa static. Vùng nhớ còn được chia thành 2 loại là read-only area và read-write area. Ví dụ về các biến được lưu trữ tại Initialized Data Segment:
+
+#include<iostream>
+
+using namespace std;
+
+// Biến c là biến toàn cục nên sẽ được lưu trữ ở vùng nhớ Initialized Data Segment, cụ thể hơn là read-write area
+char c[] = "Codelearn";
+
+// Biến s là hằng số và là biến toàn cục nên sẽ được lưu trữ ở vùng nhớ Initialized Data Segment, cụ thể hơn là read-only area
+const char s[] =  "cla";
+
+int main() {
+	// Biến x là biến static nên sẽ được lưu trữ ở vùng nhớ Initialized Data Segment
+	static int x = 10;
+	return 0;
+}
+3. Uninitialized Data Segment (bss)
+
+Đây là vùng nhớ dùng để lưu trữ các biến toàn cục, biến được khai báo bằng từ khóa static nhưng chưa được khởi tạo giá trị. Các biến nằm trong vùng nhớ này sẽ có giá trị mặc định bằng 0. Ví dụ về các biến được lưu trữ trong vùng nhớ BSS: 
+
+#include<iostream>
+
+using namespace std;
+
+// Biến C là biến toàn cụ và chưa được khởi tạo giá trị nên sẽ nằm ở vùng nhớ BSS
+char c;
+
+int main() {
+	// Biến x là biến được khai báo với từ khóa static và chưa được khởi tạo giá trị nên sẽ nằm ở vùng nhớ BSS
+	static int x;
+	return 0;
+}
+4. Heap
+
+Đây là vùng nhớ dùng cho cấp phát động, vùng nhớ này có đặc điểm là không được quản lý bởi CPU, đó cũng là lý do bạn phải tự quản lý vùng nhớ được cấp phát động để tránh memory leak (rò rỉ bộ nhớ). Để cấp phát vùng nhớ trên heap bạn dùng toán tử new như đã được học:
+
+#include<iostream>
+
+using namespace std;
+
+int main() {
+	// Cấp phát bộ nhớ động cho mảng có 10 phần tử
+	// Biến p nằm ở vùng nhớ stack 
+	// Vùng nhớ mà biến p trỏ tới nằm ở vùng nhớ heap
+	int* p = new int[10];
+	return 0;
+}
+5. Stack
+
+Đây là vùng nhớ dùng để lưu trữ các biến cục bộ, các tham số của hàm, địa chỉ của hàm (function address), đó cũng là lý do khi gọi hàm nhiều chương trình sẽ báo lỗi tràn bộ nhớ stack. Vùng nhớ này có tốc độ truy xuất nhanh nhưng lại có kích thước nhỏ. Ví dụ về các biến được lưu trữ trong vùng nhớ stack:
+
+#include<iostream>
+
+using namespace std;
+
+int main() {
+	// arr và x là 2 biến cục bộ nên sẽ được lưu trữ tại vùng nhớ stack
+	int arr[100];
+	int x;
+	return 0;
+}
