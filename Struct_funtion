@@ -1,0 +1,118 @@
+#include<iostream>
+
+using namespace std;
+
+struct Student
+{
+    string name;
+    int age;
+};
+
+
+
+int main() {
+	Student st;
+    cin >> st.name;
+    cin >> st.age;
+    cout << "Name: " << st.name << endl;
+    cout << "Age: " << st.age;
+	return 0;
+}
+----------------------------------------------
+//Hàm nhập danh sách
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	string name;
+	int age;
+	int score;
+};
+
+int main() {
+	int n;
+	cin >> n;
+	Student *students = new Student[100];
+	for (int i = 0; i < n; i++) {
+		cin >> students[i].name >> students[i].age >> students[i].score;
+	}
+
+	Student s = students[0];
+	for (int i = 1; i < n; i++) {
+		if (students[i].score > s.score) {
+			s = students[i];
+		}
+	}
+
+	cout << "Name: " << s.name << endl;
+	cout << "Age: " << s.age << endl;
+	cout << "Score: " << s.score;
+	
+	delete[] students;
+	return 0;
+}
+
+----------------------------------------------------------
+//Hàm display
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	string name;
+    int age;
+    void display()
+    {
+        cout << "Name: " <<  name << endl;
+        cout << "Age: " << age << endl;
+    }
+};
+
+
+
+int main() {
+	int n;
+    cin >> n;
+	Student students[100];
+	for(int i = 0; i < n; i++)
+    {
+        cin >> students[i].name >> students[i].age;
+    }
+	for (int i = 0; i < n; i++) {
+		students[i].display();
+	}
+	return 0;
+}
+
+-----------------------------------------------------
+//Hàm getInformation
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	string name;
+	int age;
+	void display() {
+		cout << "Name: " <<  name << endl;
+        cout << "Age: " << age << endl;
+	}
+	void getInformation() {
+		cin >> name;
+        cin >> age;
+	}
+};
+
+int main() {
+	int n;
+	Student students[100];
+	cin >> n;
+	for (int i = 0; i < n; i++) {
+		students[i].getInformation();
+	}
+	for (int i = 0; i < n; i++) {
+		students[i].display();
+	}
+	return 0;
+}
