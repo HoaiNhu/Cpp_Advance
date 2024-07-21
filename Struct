@@ -41,3 +41,207 @@ Kết quả khi chạy chương trình:
 
 Name: Blackcat
 Age :24
+----------------------------------------------------------------------
+Để làm được bài này bạn cần hiểu về cách tổ chức bộ nhớ trong struct. Trước hết hãy xem ví dụ sau:
+
+#include<iostream>
+
+using namespace std;
+
+struct Point {
+	int x;
+	int y;
+	int z;
+};
+
+int main() {
+	Point p;
+	cout << (int)&p << endl;
+	cout << (int)&p.x << endl;
+	cout << (int)&p.y << endl;
+	cout << (int)&p.z << endl;
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+8125512
+8125512
+8125516
+8125520
+Có thể thấy địa chỉ của biến p chính là địa chỉ của biến p.x và 3 biến p.x, p.y, p.z được nằm trên các ô nhớ liên tiếp nhau. Do đó có thể nhận xét rằng các biến bên trong struct sẽ được nằm cạnh nhau trên bộ nhớ và địa chỉ của struct chính là địa chỉ của biến đầu tiên.
+
+Bạn có thể lấy ra kích thước của struct bằng hàm sizeof(). Ví dụ:
+
+#include<iostream>
+
+using namespace std;
+
+struct Point {
+	int x;
+	int y;
+	int z;
+};
+
+int main() {
+	cout << sizeof(Point);
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+12
+Kích thước của struct Point bằng với tổng kích thước của các biến bên trong nó. Nhưng trong bài này kết quả sẽ không phải là sizeof(char) + sizeof(int) + sizeof(double) = 13. Để hiểu rõ hơn, bạn hãy chạy thử đoạn code ở phần bài tập:
+
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	char gender;
+	int age;
+	double gpa;
+};
+
+int main() {
+	cout << sizeof(Student);
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+16
+Có thể thấy kết quả không phải là 13 mà là 16. Để hiểu được lý do thì trước tiên bạn cần hiểu về memory access granualarity.
+
+Memory access granualarity
+
+Bộ nhớ dưới cái nhìn của lập trình viên là dãy các bytes nằm liên tiếp nhau:
+
+
+
+Bộ nhớ dưới cái nhìn của lập trình viên. Nguồn ảnh: https://developer.ibm.com/ 
+
+Với cái nhìn này mọi người đều hiểu đơn giản là muốn lấy giá trị của vùng nhớ có địa chỉ từ 1 tới 4 (bằng với kích thước kiểu int) thì chỉ cần lấy giá trị của từng ô nhớ và tổng hợp lại. Tuy nhiên, việc đọc và ghi với từng ô nhớ như vậy sẽ tốn nhiều thời gian nên CPU sẽ truy xuất tới bộ nhớ theo từng block, mỗi block có thể có kích thước 2, 4, 8, 16, 32, 64 bytes tùy vào CPU. Kích thước này được gọi là memory access granularity.
+
+
+
+Bộ nhớ dưới cái nhìn của CPU có kích thước block bằng 4. Ảnh: https://developer.ibm.com/
+
+Một điều nữa bạn cần biết là CPU chỉ có thể đọc được dữ liệu từ các vùng nhớ có địa chỉ chia hết cho kích thước của block. Ví dụ CPU có memory access granularity = 4 không thể đọc dữ liệu trực tiếp từ các vùng nhớ có địa chỉ bắt đầu từ 1, 2, 3, 5, 6, 7, ...
+
+Để đọc được các vùng nhớ có địa chỉ như trên, CPU cần thực hiện thêm một số công việc dẫn tới làm tốc độ thực thi chương trình trở nên chậm hơn. Ví dụ CPU có memory access granularity = 4 sẽ lấy ra giá trị của vùng nhớ có địa chỉ từ 1 tới 4 giống như sau:
+
+Đầu tiên CPU sẽ đọc một block từ địa chỉ 0 (đọc các ô nhớ từ 0 tới 3) và loại bỏ đi ô nhớ không mong muốn (có thể là ô nhớ 3 và cũng có thể là ô nhớ 0, tùy thuộc vào big endian và little endian). Sau đó CPU sẽ đọc tiếp một block có địa chỉ từ 4 (đọc các ô nhớ từ 4 tới 7) và loại bỏ đi 3 ô nhớ không mong muốn. Cuối cùng CPU sẽ kết hợp 2 phần này lại và lấy ra được giá trị của vùng nhớ có địa chỉ từ 1 tới 4.
+
+
+
+Có thể thấy đây là một công việc khá phức tạp, nếu các ô nhớ cần lấy có địa chỉ từ 0 tới 3 thì công việc của CPU sẽ rất đơn giản là chỉ cần đọc một block từ địa chỉ 0. Do đó, để tránh việc đọc dữ liệu từ các vùng nhớ có địa chỉ không chia hết cho kích thước của block thì trình biên dịch C++ sẽ tự động chèn thêm một số byte rỗng khi biên dịch để tối ưu tốc độ thực thi. Đó cũng là lý do đáp án của bài này là 16 chứ không phải là 13. Bạn hãy chạy thử đoạn code sau để thấy rằng trình biên dịch đã tự động chèn vào 1 số byte rỗng của struct Student:
+
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	char gender;
+	int age;
+	double gpa;
+};
+
+int main() {
+	Student s;
+	cout << (int)&s.gender << endl;
+	cout << (int)&s.age << endl;
+	cout << (int)&s.gpa << endl;
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+15726640
+15726644
+15726648
+Có thể thấy địa chỉ của biến age không nằm cạnh địa chỉ của biến gender do đã được padding 3 bytes rỗng để tối ưu hóa tốc độ truy xuất. Nếu không thực hiện padding thì địa chỉ của biến age sẽ lẻ và CPU sẽ cần thực hiện thêm 1 số thao tác dẫn tới giảm tốc độ thực thi chương trình.
+
+Cách tính kích thước của một struct
+
+Đọc tới đây bạn đã hiểu tại sao kích thước của struct thường lớn hơn tổng kích thước các biến trong struct. Để tính kích thước của một struct bạn chỉ cần ghi nhớ 3 quy tắc:
+
+Địa chỉ của struct bắt đầu từ 0.
+Biến được khai báo sau sẽ luôn có địa chỉ lớn hơn biến được khai báo trước.
+Địa chỉ của 1 biến bên trong struct luôn chia hết cho kích thước của biến đó.
+Sau khi áp dụng 3 quy tắc này thì kích thước của struct sẽ chính là địa chỉ của ô nhớ cuối cùng trong struct cộng thêm 1. Nếu bạn thấy khó hiểu thì hãy xem vài ví dụ sau đây là sẽ biết cách tính:
+
+#include<iostream>
+
+using namespace std;
+
+struct Student {
+	char gender;
+	int age;
+	double gpa;
+};
+
+int main() {
+	cout << sizeof(Student);
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+16
+Giải thích:
+
+Biến gender là biến đầu tiên trong struct Student nên sẽ có địa chỉ là 0.
+
+Biến age có địa chỉ lớn hơn địa chỉ biến gender và phải chia hết cho 4 nên địa chỉ của biến age là 4.
+
+Biến gpa có địa chỉ lớn hơn đị chỉ biến age và phải chia hết cho 8 nên địa chỉ biến gpa là 8.
+
+Ví dụ tiếp theo:
+
+#include<iostream>
+
+using namespace std;
+
+struct MyStruct {
+	char a;
+	short b;
+	short c;
+	char d;
+	short e;
+	int f;
+};
+
+int main() {
+	cout << sizeof(MyStruct);
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+16
+Giải thích:
+
+
+
+Nhìn vào hình có thể thấy địa chỉ các biến a, b, c, d, e, f thỏa mãn tính chất tăng dần và chia hết cho kích thước của nó.
+
+Lưu ý: thay đổi thứ tự các biến trong struct sẽ làm thay đổi kích thước struct. Cùng ví dụ trên nhưng nếu thay đổi vị trí các biến thì kết quả sẽ khác:
+
+#include<iostream>
+
+using namespace std;
+
+struct MyStruct {
+	char a;
+	char d;
+	short b;
+	short c;
+	short e;
+	int f;
+};
+
+int main() {
+	cout << sizeof(MyStruct);
+	return 0;
+}
+Kết quả khi chạy chương trình:
+
+12
+
+-------------------------------------
+Trong trường hợp struct rỗng (không chứa thuộc tính nào) thì kích thước của nó sẽ là 1.
